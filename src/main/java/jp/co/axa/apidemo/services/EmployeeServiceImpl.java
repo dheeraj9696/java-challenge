@@ -1,15 +1,25 @@
 package jp.co.axa.apidemo.services;
 
 import jp.co.axa.apidemo.entities.Employee;
+import jp.co.axa.apidemo.exception.EmployeeDataNotFoundException;
 import jp.co.axa.apidemo.repositories.EmployeeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
+
+/**
+ * @author dheeraj9696
+ */
+
 @Service
 public class EmployeeServiceImpl implements EmployeeService{
+
+    private static Logger logger = LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -23,20 +33,53 @@ public class EmployeeServiceImpl implements EmployeeService{
         return employees;
     }
 
-    public Employee getEmployee(Long employeeId) {
-        Optional<Employee> optEmp = employeeRepository.findById(employeeId);
-        return optEmp.get();
+    public Optional<Employee> getEmployee(Long employeeId) {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+        if (!optionalEmployee.isPresent()) {
+            logger.error("Employee Not Found. Employee Id :{}", employeeId);
+            throw new EmployeeDataNotFoundException(employeeId);
+        }
+        return employeeRepository.findById(employeeId);
     }
 
-    public void saveEmployee(Employee employee){
-        employeeRepository.save(employee);
+    public Employee saveEmployee(Employee employee){
+        try {
+            if (employee == null) {
+                logger.warn("Please pass valid employee information");
+                return null;
+            } else {
+                return employeeRepository.save(employee);
+            }
+        } catch (Exception e) {
+            logger.error("Error occurred while saving employee information.", e);
+            return null;
+        }
     }
 
     public void deleteEmployee(Long employeeId){
-        employeeRepository.deleteById(employeeId);
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+        if (!optionalEmployee.isPresent()) {
+            logger.error("Employee Not Found. Employee Id :{}", employeeId);
+            throw new EmployeeDataNotFoundException(employeeId);
+        }
+        try {
+            employeeRepository.deleteById(employeeId);
+        } catch (Exception e) {
+            logger.error("Error occurred while deleting employee information.");
+        }
     }
 
-    public void updateEmployee(Employee employee) {
-        employeeRepository.save(employee);
+    public Employee updateEmployee(Employee employee) {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employee.getId());
+        if (!optionalEmployee.isPresent()) {
+            logger.error("Employee Not Found. Employee Id :{}", employee.getId());
+            throw new EmployeeDataNotFoundException(employee.getId());
+        }
+        try {
+            employee = employeeRepository.save(employee);
+        } catch (Exception e) {
+            logger.error("Error occurred while updating employee information.");
+        }
+        return employee;
     }
 }

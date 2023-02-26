@@ -10,9 +10,21 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * @author dheeraj9696
+ */
+
 @Entity
 @Table(name="EMPLOYEE")
 public class Employee {
+
+    public Employee() {}
+    public Employee(long id, String name, int salary, String department) {
+        this.id = id;
+        this.name = name;
+        this.salary = salary;
+        this.department = department;
+    }
 
     @Getter
     @Setter
